@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syntax Flash — DebugDojo</title>
+  <meta name="description" content="Drill Python syntax with flashcards. Master the building blocks of Python code.">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Debug<span>Dojo</span></a>
+  <ul>
+    <li><a href="../arcade.html">Arcade</a></li>
+    <li><a href="../journey.html">My Journey</a></li>
+  </ul>
+  <a href="../journey.html" class="nav-belt" id="nav-belt">
+    <span class="belt-dot"></span>
+    <span class="belt-name">My Belt</span>
+  </a>
+</nav>
+
+<div class="game-page">
+  <div class="game-header">
+    <div>
+      <div class="game-title">⚡ Syntax Flash</div>
+      <div style="color:var(--muted);font-size:0.85rem">Choose the correct Python syntax</div>
+    </div>
+    <div class="score-box">
+      <div class="num" id="score-display">0 / 0</div>
+      <div class="label">Score</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <div id="question-area">
+    <div style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem" id="q-subtitle"></div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;text-align:center;margin-bottom:1.5rem">
+      <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:0.5rem" id="card-category"></div>
+      <div style="font-size:1.3rem;font-weight:600;margin-bottom:0.25rem" id="card-concept"></div>
+      <div style="font-size:0.85rem;color:var(--muted)" id="card-hint"></div>
+    </div>
+
+    <div class="question-text" style="font-size:0.95rem;font-weight:500;margin-bottom:1rem">Which is the correct Python syntax?</div>
+    <div class="options" id="options-area"></div>
+    <div class="explain-box" id="explain-box"></div>
+    <div style="margin-top:1.5rem;display:none" id="next-btn-wrap">
+      <button class="btn btn-red" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+
+  <div class="results-card" id="results-card">
+    <div style="font-size:3rem;margin-bottom:1rem">⚡</div>
+    <div class="results-score" id="results-score"></div>
+    <div class="results-label" id="results-label"></div>
+    <div style="color:var(--muted);font-size:0.9rem;margin-top:0.5rem" id="results-xp"></div>
+    <div class="results-actions">
+      <button class="btn btn-red" onclick="restartGame()">Play Again</button>
+      <a href="../arcade.html" class="btn btn-ghost">Browse Games</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="logo">Debug<span style="color:var(--gold)">Dojo</span></span>
+</footer>
+
+<script src="../js/app.js"></script>
+<script>
+const ALL_QUESTIONS = [
+  { category:"Functions",    concept:"Define a function called greet",           hint:"Use the def keyword",                     options:["function greet():","def greet():","define greet():","func greet():"],                                           answer:1, explain:"Python uses <code>def</code> to define functions, followed by name, parentheses, and a colon." },
+  { category:"Loops",        concept:"Loop 5 times using range",                 hint:"Use a for loop",                          options:["for i in range(5):","loop i from 0 to 5:","for i = 0; i < 5; i++:","foreach i in range(5):"],                   answer:0, explain:"<code>for i in range(5):</code> iterates over 0,1,2,3,4 — five times total." },
+  { category:"Conditionals", concept:"Check if x is greater than 10",            hint:"Use an if statement",                     options:["if x > 10 then:","if (x > 10):","if x > 10:","when x > 10:"],                                                   answer:2, explain:"Python if statements don't need parentheses and end with a colon: <code>if x > 10:</code>" },
+  { category:"Variables",    concept:"Store the text hello in a variable msg",   hint:"Just use = to assign",                    options:["var msg = 'hello'","let msg = 'hello'","msg = 'hello'","string msg = 'hello'"],                                   answer:2, explain:"Python doesn't need var or let. Just write <code>msg = 'hello'</code>." },
+  { category:"Lists",        concept:"Create a list with 3 fruits",              hint:"Lists use square brackets",               options:["fruits = ('apple','banana','cherry')","fruits = ['apple','banana','cherry']","fruits = {'apple','banana','cherry'}","fruits = apple,banana,cherry"], answer:1, explain:"Lists use square brackets <code>[]</code>. Parentheses make a tuple, curly braces make a set or dict." },
+  { category:"Dictionaries", concept:"Create a dict with key name, value Alex",  hint:"Dicts use curly braces and colons",       options:["d = ['name':'Alex']","d = ('name','Alex')","d = {'name':'Alex'}","d = {name='Alex'}"],                           answer:2, explain:"Dictionaries use <code>{}</code> with key: value pairs: <code>{'name': 'Alex'}</code>" },
+  { category:"Strings",      concept:"Get the length of a string called text",   hint:"Python has a built-in function for this", options:["text.length()","text.size()","length(text)","len(text)"],                                                        answer:3, explain:"<code>len()</code> is Python's built-in length function — works on strings, lists, dicts, and more." },
+  { category:"Return",       concept:"Return a value from a function",            hint:"One keyword does this",                   options:["give n","output n","return n","send n"],                                                                         answer:2, explain:"<code>return</code> sends a value back from a function to wherever it was called." },
+  { category:"While Loops",  concept:"Loop while count is less than 10",          hint:"Use a while loop",                        options:["while count < 10 do:","loop while count < 10:","while (count < 10):","while count < 10:"],                      answer:3, explain:"Python while loops: <code>while condition:</code> — no parentheses, always ends with a colon." },
+  { category:"Comments",     concept:"Write a single-line comment",               hint:"One character starts a comment",          options:["// This is a comment","/* This is a comment */","# This is a comment","-- This is a comment"],                   answer:2, explain:"Python uses <code>#</code> for single-line comments. Everything after # is ignored." },
+  { category:"F-strings",    concept:"Embed a variable name in a string",         hint:"F-strings are the modern way",            options:["'Hello ' + name","'Hello {name}'","f'Hello {name}'","'Hello %s' % name"],                                       answer:2, explain:"F-strings let you embed variables directly: <code>f'Hello {name}'</code>. Prefix with f, use {} for variables." },
+  { category:"Boolean",      concept:"Check if two values are equal",             hint:"Comparison, not assignment",              options:["x = y","x === y","x == y","x equals y"],                                                                        answer:2, explain:"<code>==</code> compares values. Single <code>=</code> is assignment. Python has no <code>===</code>." },
+  { category:"Lists",        concept:"Add an item to the end of a list",          hint:"Lists have a method for this",            options:["items.add(x)","items.push(x)","items.insert(x)","items.append(x)"],                                            answer:3, explain:"<code>.append(x)</code> adds x to the end of a list." },
+  { category:"None",         concept:"Represent the absence of a value",          hint:"Python's version of null",                options:["null","undefined","None","empty"],                                                                              answer:2, explain:"Python uses <code>None</code> (capital N) for the absence of a value." },
+  { category:"Input",        concept:"Ask the user to type something",            hint:"Built-in function for keyboard input",    options:["read()","scan()","input()","prompt()"],                                                                         answer:2, explain:"<code>input()</code> waits for the user to type something and press Enter, then returns it as a string." },
+];
+
+let questions = [], current = 0, correct = 0, answered = false;
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function startGame() {
+  questions = shuffle(ALL_QUESTIONS).slice(0, 10);
+  current = correct = 0;
+  answered = false;
+  document.getElementById('results-card').classList.remove('show');
+  document.getElementById('question-area').style.display = 'block';
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  const q = questions[current];
+  document.getElementById('progress-fill').style.width = (current / questions.length * 100) + '%';
+  document.getElementById('score-display').textContent = `${correct} / ${current}`;
+  document.getElementById('q-subtitle').textContent = `Card ${current + 1} of ${questions.length}`;
+  document.getElementById('card-category').textContent = q.category;
+  document.getElementById('card-concept').textContent = q.concept;
+  document.getElementById('card-hint').textContent = `Hint: ${q.hint}`;
+  document.getElementById('explain-box').classList.remove('show');
+  document.getElementById('next-btn-wrap').style.display = 'none';
+
+  const optArea = document.getElementById('options-area');
+  optArea.innerHTML = '';
+  'ABCD'.split('').forEach((letter, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.innerHTML = `<div class="option-letter">${letter}</div><code style="font-family:monospace;font-size:0.9rem">${q.options[i]}</code>`;
+    div.addEventListener('click', () => selectAnswer(i));
+    optArea.appendChild(div);
+  });
+}
+
+function selectAnswer(chosen) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const opts = document.querySelectorAll('.option');
+  const isCorrect = chosen === q.answer;
+  opts[chosen].classList.add(isCorrect ? 'correct' : 'wrong');
+  opts[q.answer].classList.add('correct');
+  if (isCorrect) { correct++; addXP(10); }
+  document.getElementById('score-display').textContent = `${correct} / ${current + 1}`;
+  const el = document.getElementById('explain-box');
+  el.innerHTML = (isCorrect ? '✅ <strong>Correct!</strong><br><br>' : '❌ <strong>Not quite.</strong><br><br>') + q.explain;
+  el.classList.add('show');
+  document.getElementById('next-btn-wrap').style.display = 'block';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) showResults();
+  else loadQuestion();
+}
+
+function showResults() {
+  document.getElementById('question-area').style.display = 'none';
+  document.getElementById('results-card').classList.add('show');
+  const pct = Math.round(correct / questions.length * 100);
+  document.getElementById('results-score').textContent = `${correct} / ${questions.length}`;
+  document.getElementById('results-label').textContent = pct === 100 ? '🏆 Perfect syntax mastery!' : pct >= 75 ? '🔥 Strong syntax skills!' : pct >= 50 ? '👊 Getting there — keep drilling!' : '💪 Repeat this game daily until it clicks!';
+  document.getElementById('results-xp').textContent = `+${correct * 10} XP earned`;
+  document.getElementById('progress-fill').style.width = '100%';
+}
+
+function restartGame() { startGame(); }
+startGame();
+</script>
+</body>
+</html>

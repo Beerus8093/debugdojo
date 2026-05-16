@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcade — DebugDojo</title>
+  <meta name="description" content="Browse all DebugDojo mini-games. Practice Python debugging, syntax, and problem solving.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Debug<span>Dojo</span></a>
+  <ul>
+    <li><a href="arcade.html" style="color:var(--text)">Arcade</a></li>
+    <li><a href="journey.html">My Journey</a></li>
+  </ul>
+  <a href="journey.html" class="nav-belt" id="nav-belt">
+    <span class="belt-dot"></span>
+    <span class="belt-name">Start Journey</span>
+  </a>
+</nav>
+
+<div class="arcade-header">
+  <div class="section-tag">Arcade Mode</div>
+  <div class="section-title">Pick a Game & Train</div>
+  <p class="section-sub">Jump into any game. No required order — just pick what you want to practice.</p>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filter('all', this)">All Games</button>
+    <button class="filter-btn" onclick="filter('debug', this)">🐛 Debugging</button>
+    <button class="filter-btn" onclick="filter('syntax', this)">⚡ Syntax</button>
+    <button class="filter-btn" onclick="filter('trace', this)">🖨️ Code Tracing</button>
+  </div>
+
+  <div class="games-grid" id="games-grid">
+
+    <a href="games/spot-the-bug.html" class="game-card" data-cat="debug">
+      <div class="game-icon">🐛</div>
+      <h3>Spot the Bug</h3>
+      <p>Read broken Python code and identify exactly what's wrong. The most important debugging skill you'll ever develop.</p>
+      <div class="game-meta">
+        <span class="tag tag-python">Python</span>
+        <span class="tag tag-debug">Debugging</span>
+        <span class="tag tag-easy">Beginner</span>
+      </div>
+    </a>
+
+    <a href="games/what-prints.html" class="game-card" data-cat="trace">
+      <div class="game-icon">🖨️</div>
+      <h3>What Does It Print?</h3>
+      <p>See a Python snippet and predict the exact output. Trains you to mentally trace through code step by step.</p>
+      <div class="game-meta">
+        <span class="tag tag-python">Python</span>
+        <span class="tag tag-easy">Beginner</span>
+      </div>
+    </a>
+
+    <a href="games/syntax-flash.html" class="game-card" data-cat="syntax">
+      <div class="game-icon">⚡</div>
+      <h3>Syntax Flash</h3>
+      <p>Flashcard-style syntax drilling. Concept on the front, Python syntax on the back. Kata for your fingers.</p>
+      <div class="game-meta">
+        <span class="tag tag-python">Python</span>
+        <span class="tag tag-syntax">Syntax</span>
+        <span class="tag tag-easy">Beginner</span>
+      </div>
+    </a>
+
+    <div class="game-card" style="opacity:0.4;cursor:not-allowed">
+      <div class="game-icon">🧩</div>
+      <h3>Fix the Error</h3>
+      <p>Read a Python error message and pick the correct fix. Coming soon.</p>
+      <div class="game-meta">
+        <span class="tag tag-debug">Debugging</span>
+        <span class="tag tag-medium">Intermediate</span>
+      </div>
+    </div>
+
+    <div class="game-card" style="opacity:0.4;cursor:not-allowed">
+      <div class="game-icon">🏗️</div>
+      <h3>Build It</h3>
+      <p>Given a goal, arrange code blocks in the correct order. Coming soon.</p>
+      <div class="game-meta">
+        <span class="tag tag-python">Python</span>
+        <span class="tag tag-medium">Intermediate</span>
+      </div>
+    </div>
+
+    <div class="game-card" style="opacity:0.4;cursor:not-allowed">
+      <div class="game-icon">⏱️</div>
+      <h3>Speed Round</h3>
+      <p>Answer as many syntax questions as you can in 60 seconds. Coming soon.</p>
+      <div class="game-meta">
+        <span class="tag tag-syntax">Syntax</span>
+        <span class="tag tag-medium">Intermediate</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span class="logo">Debug<span style="color:var(--gold)">Dojo</span></span>
+  <p>Learn to code. Earn your belt. &nbsp;🥋</p>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+function filter(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.game-card[data-cat]').forEach(card => {
+    card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

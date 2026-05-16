@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spot the Bug — DebugDojo</title>
+  <meta name="description" content="Read broken Python code and identify the bug. Learn to debug Python for beginners.">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Debug<span>Dojo</span></a>
+  <ul>
+    <li><a href="../arcade.html">Arcade</a></li>
+    <li><a href="../journey.html">My Journey</a></li>
+  </ul>
+  <a href="../journey.html" class="nav-belt" id="nav-belt">
+    <span class="belt-dot"></span>
+    <span class="belt-name">My Belt</span>
+  </a>
+</nav>
+
+<div class="game-page">
+  <div class="game-header">
+    <div>
+      <div class="game-title">🐛 Spot the Bug</div>
+      <div style="color:var(--muted);font-size:0.85rem">Find what's wrong in the Python code</div>
+    </div>
+    <div class="score-box">
+      <div class="num" id="score-display">0 / 0</div>
+      <div class="label">Score</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <div id="question-area">
+    <div style="color:var(--muted);font-size:0.85rem;margin-bottom:0.5rem" id="q-subtitle"></div>
+    <div class="question-text" id="q-title"></div>
+    <div class="code-block" id="code-display"></div>
+    <div class="question-text" style="font-size:0.95rem;font-weight:500">What is the bug?</div>
+    <div class="options" id="options-area"></div>
+    <div class="explain-box" id="explain-box"></div>
+    <div style="margin-top:1.5rem;display:none" id="next-btn-wrap">
+      <button class="btn btn-red" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+
+  <div class="results-card" id="results-card">
+    <div style="font-size:3rem;margin-bottom:1rem">🥋</div>
+    <div class="results-score" id="results-score"></div>
+    <div class="results-label" id="results-label"></div>
+    <div style="color:var(--muted);font-size:0.9rem;margin-top:0.5rem" id="results-xp"></div>
+    <div class="results-actions">
+      <button class="btn btn-red" onclick="restartGame()">Play Again</button>
+      <a href="../arcade.html" class="btn btn-ghost">Browse Games</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="logo">Debug<span style="color:var(--gold)">Dojo</span></span>
+</footer>
+
+<script src="../js/app.js"></script>
+<script>
+const ALL_QUESTIONS = [
+  {
+    title: "The Infinite Loop",
+    code: `i = 0\nwhile i < 5:\n    print(i)\n    i = i - 1`,
+    bugLine: 3,
+    options: ["i should start at 1, not 0", "i = i - 1 should be i = i + 1", "The condition should be i > 5", "print(i) needs parentheses"],
+    answer: 1,
+    explain: "<strong>The fix:</strong> <code>i = i + 1</code><br><br>The loop decrements i instead of incrementing it. i goes 0 → -1 → -2 forever and never reaches 5, causing an infinite loop.",
+  },
+  {
+    title: "Off By One",
+    code: `# Print numbers 1 through 10\nfor i in range(1, 10):\n    print(i)`,
+    bugLine: 1,
+    options: ["for should be foreach", "range(1, 10) should be range(1, 11)", "print(i) should be print(i + 1)", "There is no bug"],
+    answer: 1,
+    explain: "<strong>The fix:</strong> <code>range(1, 11)</code><br><br><code>range(start, stop)</code> goes up to but does NOT include stop. To include 10, you need range(1, 11).",
+  },
+  {
+    title: "Wrong Comparison",
+    code: `score = 85\nif score = 100:\n    print("Perfect score!")\nelse:\n    print("Keep trying!")`,
+    bugLine: 1,
+    options: ["score should be a string", "print needs double quotes", "= should be == to compare values", "if needs a colon at the end"],
+    answer: 2,
+    explain: "<strong>The fix:</strong> <code>if score == 100:</code><br><br>A single <code>=</code> is assignment. Double <code>==</code> is comparison. Using = inside an if is a SyntaxError.",
+  },
+  {
+    title: "Missing Colon",
+    code: `def greet(name)\n    print("Hello, " + name)\n\ngreet("Alex")`,
+    bugLine: 0,
+    options: ["def should be function", "Missing colon after def greet(name)", "name needs quotes", "greet needs parentheses"],
+    answer: 1,
+    explain: "<strong>The fix:</strong> <code>def greet(name):</code><br><br>Every function definition, if, loop, and class must end with a colon. Missing it causes a SyntaxError.",
+  },
+  {
+    title: "String + Number",
+    code: `age = 25\nprint("I am " + age + " years old")`,
+    bugLine: 1,
+    options: ["age should be in quotes", "You cannot use + to join strings", "age needs to be converted: str(age)", "print needs double quotes"],
+    answer: 2,
+    explain: "<strong>The fix:</strong> <code>str(age)</code><br><br>You can't add a string and an integer directly. Use <code>str(age)</code> to convert, or use an f-string: <code>f\"I am {age} years old\"</code>.",
+  },
+  {
+    title: "Wrong Indentation",
+    code: `for i in range(3):\nprint(i)`,
+    bugLine: 1,
+    options: ["range(3) should be range(0, 3)", "print(i) must be indented inside the loop", "for should be while", "i should start at 1"],
+    answer: 1,
+    explain: "<strong>The fix:</strong> indent <code>print(i)</code> with 4 spaces.<br><br>Python uses indentation to define code blocks. Without it Python throws an IndentationError.",
+  },
+  {
+    title: "List Index Out of Range",
+    code: `fruits = ["apple", "banana", "cherry"]\nprint(fruits[3])`,
+    bugLine: 1,
+    options: ["Lists need curly braces", "fruits[3] should be fruits[2] — indexes start at 0", "print needs the list name", "cherry needs quotes"],
+    answer: 1,
+    explain: "<strong>The fix:</strong> <code>fruits[2]</code><br><br>Indexes start at 0. A 3-item list has indexes 0, 1, 2. Accessing index 3 raises an <code>IndexError</code>.",
+  },
+  {
+    title: "Calling Without Parentheses",
+    code: `def say_hi():\n    print("Hi!")\n\nsay_hi`,
+    bugLine: 3,
+    options: ["def should be define", "say_hi needs () to actually call the function", "print needs a variable", "The indentation is wrong"],
+    answer: 1,
+    explain: "<strong>The fix:</strong> <code>say_hi()</code><br><br>Without parentheses, <code>say_hi</code> just references the function — it doesn't call it.",
+  },
+  {
+    title: "Variable Before Assignment",
+    code: `print(total)\ntotal = 0\nfor n in [1, 2, 3]:\n    total += n`,
+    bugLine: 0,
+    options: ["total should be called sum", "print(total) is called before total is defined", "The for loop syntax is wrong", "+= should be =+"],
+    answer: 1,
+    explain: "<strong>The fix:</strong> move <code>total = 0</code> before <code>print(total)</code>.<br><br>Python reads top to bottom. Using a variable before it's assigned raises a <code>NameError</code>.",
+  },
+  {
+    title: "Modifying a List While Iterating",
+    code: `nums = [1, 2, 3, 4, 5]\nfor n in nums:\n    if n % 2 == 0:\n        nums.remove(n)\nprint(nums)`,
+    bugLine: 3,
+    options: ["remove() doesn't exist", "n % 2 should be n % 2 == 1", "Removing items from a list while looping skips items", "The for loop should use range()"],
+    answer: 2,
+    explain: "<strong>The fix:</strong> <code>nums = [n for n in nums if n % 2 != 0]</code><br><br>Removing items mid-loop skips items because indexes shift. Use a list comprehension instead.",
+  },
+];
+
+let questions = [], current = 0, correct = 0, answered = false;
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function startGame() {
+  questions = shuffle(ALL_QUESTIONS).slice(0, 8);
+  current = correct = 0;
+  answered = false;
+  document.getElementById('results-card').classList.remove('show');
+  document.getElementById('question-area').style.display = 'block';
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  const q = questions[current];
+  document.getElementById('progress-fill').style.width = (current / questions.length * 100) + '%';
+  document.getElementById('score-display').textContent = `${correct} / ${current}`;
+  document.getElementById('q-subtitle').textContent = `Question ${current + 1} of ${questions.length}`;
+  document.getElementById('q-title').textContent = q.title;
+  document.getElementById('explain-box').classList.remove('show');
+  document.getElementById('next-btn-wrap').style.display = 'none';
+
+  const lines = q.code.split('\n');
+  document.getElementById('code-display').innerHTML = lines.map((line, i) => {
+    const escaped = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return i === q.bugLine ? `<span class="bug-line">${escaped || ' '}</span>` : escaped;
+  }).join('\n');
+
+  const optArea = document.getElementById('options-area');
+  optArea.innerHTML = '';
+  'ABCD'.split('').forEach((letter, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.innerHTML = `<div class="option-letter">${letter}</div><span>${q.options[i]}</span>`;
+    div.addEventListener('click', () => selectAnswer(i));
+    optArea.appendChild(div);
+  });
+}
+
+function selectAnswer(chosen) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const opts = document.querySelectorAll('.option');
+  const isCorrect = chosen === q.answer;
+  opts[chosen].classList.add(isCorrect ? 'correct' : 'wrong');
+  opts[q.answer].classList.add('correct');
+  if (isCorrect) { correct++; addXP(10); }
+  document.getElementById('score-display').textContent = `${correct} / ${current + 1}`;
+  const el = document.getElementById('explain-box');
+  el.innerHTML = (isCorrect ? '✅ <strong>Correct!</strong><br><br>' : '❌ <strong>Not quite.</strong><br><br>') + q.explain;
+  el.classList.add('show');
+  document.getElementById('next-btn-wrap').style.display = 'block';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) showResults();
+  else loadQuestion();
+}
+
+function showResults() {
+  document.getElementById('question-area').style.display = 'none';
+  const card = document.getElementById('results-card');
+  card.classList.add('show');
+  const pct = Math.round(correct / questions.length * 100);
+  document.getElementById('results-score').textContent = `${correct} / ${questions.length}`;
+  document.getElementById('results-label').textContent = pct === 100 ? '🏆 Perfect! You\'re a debugging master!' : pct >= 75 ? '🔥 Great work! Strong debugging instincts.' : pct >= 50 ? '👊 Solid effort! Review the explanations and try again.' : '💪 Keep training! Every mistake is a lesson.';
+  document.getElementById('results-xp').textContent = `+${correct * 10} XP earned this round`;
+  document.getElementById('progress-fill').style.width = '100%';
+}
+
+function restartGame() { startGame(); }
+startGame();
+</script>
+</body>
+</html>

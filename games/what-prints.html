@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What Does It Print? — DebugDojo</title>
+  <meta name="description" content="Read Python code and predict its output. Learn to trace code mentally.">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Debug<span>Dojo</span></a>
+  <ul>
+    <li><a href="../arcade.html">Arcade</a></li>
+    <li><a href="../journey.html">My Journey</a></li>
+  </ul>
+  <a href="../journey.html" class="nav-belt" id="nav-belt">
+    <span class="belt-dot"></span>
+    <span class="belt-name">My Belt</span>
+  </a>
+</nav>
+
+<div class="game-page">
+  <div class="game-header">
+    <div>
+      <div class="game-title">🖨️ What Does It Print?</div>
+      <div style="color:var(--muted);font-size:0.85rem">Trace the code and predict the output</div>
+    </div>
+    <div class="score-box">
+      <div class="num" id="score-display">0 / 0</div>
+      <div class="label">Score</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <div id="question-area">
+    <div style="color:var(--muted);font-size:0.85rem;margin-bottom:0.5rem" id="q-subtitle"></div>
+    <div class="question-text">What does this code print?</div>
+    <div class="code-block" id="code-display"></div>
+    <div class="options" id="options-area"></div>
+    <div class="explain-box" id="explain-box"></div>
+    <div style="margin-top:1.5rem;display:none" id="next-btn-wrap">
+      <button class="btn btn-red" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+
+  <div class="results-card" id="results-card">
+    <div style="font-size:3rem;margin-bottom:1rem">🥋</div>
+    <div class="results-score" id="results-score"></div>
+    <div class="results-label" id="results-label"></div>
+    <div style="color:var(--muted);font-size:0.9rem;margin-top:0.5rem" id="results-xp"></div>
+    <div class="results-actions">
+      <button class="btn btn-red" onclick="restartGame()">Play Again</button>
+      <a href="../arcade.html" class="btn btn-ghost">Browse Games</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="logo">Debug<span style="color:var(--gold)">Dojo</span></span>
+</footer>
+
+<script src="../js/app.js"></script>
+<script>
+const ALL_QUESTIONS = [
+  { code: `x = 5\nprint(x)`, options: ["5", "x", "None", "Error"], answer: 0, explain: "<code>x = 5</code> assigns 5 to x. <code>print(x)</code> outputs the value: <strong>5</strong>." },
+  { code: `print(2 + 3 * 4)`, options: ["20", "14", "24", "9"], answer: 1, explain: "Multiplication first: 3 × 4 = 12. Then addition: 2 + 12 = <strong>14</strong>." },
+  { code: `print("ha" * 3)`, options: ["ha ha ha", "hahaha", "3", "Error"], answer: 1, explain: "Multiplying a string repeats it. \"ha\" * 3 → <strong>hahaha</strong>." },
+  { code: `x = 10\nx += 5\nprint(x)`, options: ["10", "5", "15", "105"], answer: 2, explain: "<code>x += 5</code> means x = x + 5. 10 + 5 = <strong>15</strong>." },
+  { code: `nums = [1, 2, 3]\nprint(nums[-1])`, options: ["1", "2", "3", "Error"], answer: 2, explain: "Negative indexes count from the end. -1 is the last element: <strong>3</strong>." },
+  { code: `total = 0\nfor n in [1, 2, 3]:\n    total += n\nprint(total)`, options: ["0", "3", "6", "123"], answer: 2, explain: "Adds 1+2+3 = <strong>6</strong>." },
+  { code: `x = 7\nif x % 2 == 0:\n    print("even")\nelse:\n    print("odd")`, options: ["even", "odd", "7", "None"], answer: 1, explain: "7 % 2 = 1, not 0. Condition is False → prints <strong>odd</strong>." },
+  { code: `s = "Python"\nprint(len(s))`, options: ["5", "6", "7", "Error"], answer: 1, explain: "P-y-t-h-o-n = <strong>6</strong> characters." },
+  { code: `def double(n):\n    return n * 2\n\nprint(double(4))`, options: ["4", "2", "8", "None"], answer: 2, explain: "double(4) returns 4 * 2 = <strong>8</strong>." },
+  { code: `x = 5\ny = 2\nprint(x // y)`, options: ["2.5", "2", "3", "1"], answer: 1, explain: "<code>//</code> is floor division. 5 ÷ 2 = 2.5 → floor = <strong>2</strong>." },
+  { code: `name = "alex"\nprint(name.upper())`, options: ["alex", "Alex", "ALEX", "Error"], answer: 2, explain: "<code>.upper()</code> converts all to uppercase → <strong>ALEX</strong>." },
+  { code: `print(10 % 3)`, options: ["3", "1", "0", "3.33"], answer: 1, explain: "10 = 3×3 + 1. Remainder = <strong>1</strong>." },
+  { code: `items = [10, 20, 30]\nprint(items[1])`, options: ["10", "20", "30", "Error"], answer: 1, explain: "Index 0=10, index 1=<strong>20</strong>, index 2=30." },
+  { code: `x = True\nprint(not x)`, options: ["True", "False", "not True", "Error"], answer: 1, explain: "<code>not True</code> = <strong>False</strong>." },
+  { code: `for i in range(3):\n    print(i)`, options: ["0 1 2 3", "0 1 2", "1 2 3", "1 2"], answer: 1, explain: "<code>range(3)</code> produces 0, 1, 2 — does NOT include 3. Prints <strong>0 1 2</strong>." },
+];
+
+let questions = [], current = 0, correct = 0, answered = false;
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function startGame() {
+  questions = shuffle(ALL_QUESTIONS).slice(0, 8);
+  current = correct = 0;
+  answered = false;
+  document.getElementById('results-card').classList.remove('show');
+  document.getElementById('question-area').style.display = 'block';
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  const q = questions[current];
+  document.getElementById('progress-fill').style.width = (current / questions.length * 100) + '%';
+  document.getElementById('score-display').textContent = `${correct} / ${current}`;
+  document.getElementById('q-subtitle').textContent = `Question ${current + 1} of ${questions.length}`;
+  document.getElementById('explain-box').classList.remove('show');
+  document.getElementById('next-btn-wrap').style.display = 'none';
+  document.getElementById('code-display').innerHTML = q.code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const optArea = document.getElementById('options-area');
+  optArea.innerHTML = '';
+  'ABCD'.split('').forEach((letter, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.innerHTML = `<div class="option-letter">${letter}</div><code style="font-family:monospace">${q.options[i]}</code>`;
+    div.addEventListener('click', () => selectAnswer(i));
+    optArea.appendChild(div);
+  });
+}
+
+function selectAnswer(chosen) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const opts = document.querySelectorAll('.option');
+  const isCorrect = chosen === q.answer;
+  opts[chosen].classList.add(isCorrect ? 'correct' : 'wrong');
+  opts[q.answer].classList.add('correct');
+  if (isCorrect) { correct++; addXP(10); }
+  document.getElementById('score-display').textContent = `${correct} / ${current + 1}`;
+  const el = document.getElementById('explain-box');
+  el.innerHTML = (isCorrect ? '✅ <strong>Correct!</strong><br><br>' : '❌ <strong>Not quite.</strong><br><br>') + q.explain;
+  el.classList.add('show');
+  document.getElementById('next-btn-wrap').style.display = 'block';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) showResults();
+  else loadQuestion();
+}
+
+function showResults() {
+  document.getElementById('question-area').style.display = 'none';
+  document.getElementById('results-card').classList.add('show');
+  const pct = Math.round(correct / questions.length * 100);
+  document.getElementById('results-score').textContent = `${correct} / ${questions.length}`;
+  document.getElementById('results-label').textContent = pct < 50 ? '💪 Keep training! Trace through each line slowly.' : pct < 75 ? '👊 Getting there! Read code line by line.' : pct < 100 ? '🔥 Great work! You can read code well.' : '🏆 Perfect! Your code-reading skills are elite.';
+  document.getElementById('results-xp').textContent = `+${correct * 10} XP earned`;
+  document.getElementById('progress-fill').style.width = '100%';
+}
+
+function restartGame() { startGame(); }
+startGame();
+</script>
+</body>
+</html>

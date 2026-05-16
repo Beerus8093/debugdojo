@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DebugDojo — Learn to Code Through Play</title>
+  <meta name="description" content="DebugDojo teaches you to code through interactive mini-games. Debug Python, master syntax, and earn your black belt in programming.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Debug<span>Dojo</span></a>
+  <ul>
+    <li><a href="arcade.html">Arcade</a></li>
+    <li><a href="journey.html">My Journey</a></li>
+  </ul>
+  <a href="journey.html" class="nav-belt" id="nav-belt">
+    <span class="belt-dot" style="--belt-color:#f0f0f0"></span>
+    <span class="belt-name">Start Journey</span>
+  </a>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">🥋 The Coding Dojo</div>
+  <h1>Debug Code.<br><span>Earn Your Belt.</span></h1>
+  <p>Learn Python through interactive mini-games. Spot bugs, predict output, master syntax — level up like a martial artist.</p>
+  <div class="hero-btns">
+    <a href="journey.html" class="btn btn-red">🥷 Start Your Journey</a>
+    <a href="arcade.html"  class="btn btn-ghost">Browse Games →</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="stat-num">6</div>
+      <div class="stat-label">Belt Levels</div>
+    </div>
+    <div>
+      <div class="stat-num">3</div>
+      <div class="stat-label">Mini-Games</div>
+    </div>
+    <div>
+      <div class="stat-num">Free</div>
+      <div class="stat-label">Always</div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="section-tag">Choose Your Path</div>
+  <div class="section-title">Two Ways to Train</div>
+  <p class="section-sub">Follow a guided path or jump straight into practice.</p>
+  <div class="modes">
+    <a href="journey.html" class="mode-card journey">
+      <div class="mode-icon">🗺️</div>
+      <h2>The Journey</h2>
+      <p>Create your character, pick your experience level, and follow a guided path through levels. Earn XP and rank up your belt as you go.</p>
+      <span class="btn btn-red">Start Journey</span>
+    </a>
+    <a href="arcade.html" class="mode-card arcade">
+      <div class="mode-icon">🕹️</div>
+      <h2>Arcade Mode</h2>
+      <p>Jump straight into any mini-game. Practice whatever topic you want, whenever you want — no commitment required.</p>
+      <span class="btn btn-gold">Browse Games</span>
+    </a>
+  </div>
+</section>
+
+<section>
+  <div class="section-tag">Progression</div>
+  <div class="section-title">Earn Your Belt</div>
+  <p class="section-sub">Every correct answer earns XP. Rank up just like a real martial artist.</p>
+  <div class="belts-grid">
+    <div class="belt-card">
+      <div class="belt-stripe" style="background:#f0f0f0"></div>
+      <div class="name">White Belt</div>
+      <div class="xp">0 XP</div>
+    </div>
+    <div class="belt-card">
+      <div class="belt-stripe" style="background:#ffd60a"></div>
+      <div class="name">Yellow Belt</div>
+      <div class="xp">100 XP</div>
+    </div>
+    <div class="belt-card">
+      <div class="belt-stripe" style="background:#2dc653"></div>
+      <div class="name">Green Belt</div>
+      <div class="xp">250 XP</div>
+    </div>
+    <div class="belt-card">
+      <div class="belt-stripe" style="background:#4cc9f0"></div>
+      <div class="name">Blue Belt</div>
+      <div class="xp">500 XP</div>
+    </div>
+    <div class="belt-card">
+      <div class="belt-stripe" style="background:#e63946"></div>
+      <div class="name">Red Belt</div>
+      <div class="xp">800 XP</div>
+    </div>
+    <div class="belt-card">
+      <div class="belt-stripe" style="background:#333"></div>
+      <div class="name">Black Belt</div>
+      <div class="xp">1200 XP</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-tag">Mini-Games</div>
+  <div class="section-title">Pick a Game, Start Training</div>
+  <p class="section-sub">Each game targets a specific coding skill.</p>
+  <div class="games-grid">
+    <a href="games/spot-the-bug.html" class="game-card">
+      <div class="game-icon">🐛</div>
+      <h3>Spot the Bug</h3>
+      <p>Read broken Python code and identify exactly what's wrong. Trains your eye for real debugging.</p>
+      <div class="game-meta">
+        <span class="tag tag-python">Python</span>
+        <span class="tag tag-debug">Debugging</span>
+        <span class="tag tag-easy">Beginner</span>
+      </div>
+    </a>
+    <a href="games/what-prints.html" class="game-card">
+      <div class="game-icon">🖨️</div>
+      <h3>What Does It Print?</h3>
+      <p>See a Python snippet and predict the output. Builds your ability to read and trace code mentally.</p>
+      <div class="game-meta">
+        <span class="tag tag-python">Python</span>
+        <span class="tag tag-easy">Beginner</span>
+      </div>
+    </a>
+    <a href="games/syntax-flash.html" class="game-card">
+      <div class="game-icon">⚡</div>
+      <h3>Syntax Flash</h3>
+      <p>Flashcard-style syntax drilling. See a concept, recall the correct Python syntax. Like kata for code.</p>
+      <div class="game-meta">
+        <span class="tag tag-python">Python</span>
+        <span class="tag tag-syntax">Syntax</span>
+        <span class="tag tag-easy">Beginner</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section>
+  <div class="section-tag">How It Works</div>
+  <div class="section-title">Simple as 1, 2, 3</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Create Your Character</h3>
+      <p>Pick your name, avatar, and starting experience level. Get assigned your first belt.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Play Mini-Games</h3>
+      <p>Spot bugs, predict output, drill syntax. Every correct answer earns XP toward your next belt.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Rank Up</h3>
+      <p>Progress from White Belt to Black Belt as your skills grow. Each rank unlocks harder challenges.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="logo">Debug<span style="color:var(--gold)">Dojo</span></span>
+  <p>Learn to code. Earn your belt. &nbsp;🥋</p>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
