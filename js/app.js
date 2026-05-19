@@ -25,9 +25,16 @@ function savePlayer(player) {
 function addXP(amount) {
   const p = getPlayer();
   if (!p) return;
+  const oldBelt = getBelt(p.xp || 0).name;
   p.xp = (p.xp || 0) + amount;
   savePlayer(p);
   showXPToast(amount);
+  playSound('correct');
+  // Check for belt rank-up
+  const newBelt = getBelt(p.xp).name;
+  if (newBelt !== oldBelt) {
+    playSound('rankup');
+  }
   return p.xp;
 }
 
@@ -54,6 +61,63 @@ function updateNavBelt() {
   const label = el.querySelector('.belt-name');
   if (dot) dot.style.background = belt.color;
   if (label) label.textContent = belt.name;
+}
+
+// ── Sound system ──────────────────────────────────────────────────────────────
+function playSound(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    if (type === 'correct') {
+      // Sword unsheath — sharp upward frequency sweep
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.18);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    }
+
+    if (type === 'wrong') {
+      // Dull thud — low drop
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(120, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    }
+
+    if (type === 'rankup') {
+      // Belt rank-up — ascending four-note fanfare
+      [261, 329, 392, 523].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        const t = ctx.currentTime + i * 0.12;
+        gain.gain.setValueAtTime(0.25, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        osc.start(t);
+        osc.stop(t + 0.3);
+      });
+    }
+
+  } catch (e) {
+    // Silently fail if browser blocks audio
+  }
 }
 
 document.addEventListener('DOMContentLoaded', updateNavBelt);

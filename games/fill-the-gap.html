@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fill the Gap — DebugDojo</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    .ftg-arena { position: relative; }
+    .ftg-arena::before {
+      content: '道場';
+      position: fixed;
+      font-size: 32rem;
+      font-family: serif;
+      color: rgba(230,57,70,0.025);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+      line-height: 1;
+    }
+    .game-page { position: relative; z-index: 1; }
+
+    .ftg-q-tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--red);
+      margin-bottom: 0.35rem;
+    }
+    .ftg-q-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.75rem;
+      line-height: 1.2;
+    }
+
+    /* Code board — the stone wall */
+    .code-board {
+      background: #07070f;
+      border: 1px solid rgba(230,57,70,0.18);
+      border-radius: 12px;
+      padding: 1.75rem 2rem;
+      margin-bottom: 1.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem 0.25rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 40px rgba(0,0,0,0.6);
+      position: relative;
+      overflow: hidden;
+    }
+    .code-board::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(230,57,70,0.4), transparent);
+    }
+    .code-board::after {
+      content: 'python';
+      position: absolute;
+      top: 0.6rem; right: 0.9rem;
+      font-size: 0.6rem;
+      font-family: 'Share Tech Mono', monospace;
+      color: rgba(230,57,70,0.3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .syn { font-family: 'Share Tech Mono', monospace; font-size: 1.05rem; color: #c9d1d9; white-space: nowrap; }
+    .syn.kw  { color: #ff7b72; }
+    .syn.fn  { color: #d2a8ff; }
+    .syn.str { color: #a5d6ff; }
+    .syn.num { color: #79c0ff; }
+    .syn.op  { color: rgba(255,255,255,0.3); }
+
+    /* Drop slot — carved empty space */
+    .slot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 90px;
+      height: 40px;
+      border-radius: 8px;
+      border: 2px dashed rgba(255,214,10,0.22);
+      background: rgba(0,0,0,0.4);
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+      position: relative;
+      animation: slot-pulse 3s ease-in-out infinite;
+    }
+    @keyframes slot-pulse {
+      0%,100% { border-color: rgba(255,214,10,0.18); }
+      50%     { border-color: rgba(255,214,10,0.38); }
+    }
+    .slot.filled {
+      border-style: solid;
+      border-color: rgba(76,201,240,0.45);
+      background: rgba(76,201,240,0.05);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.3), 0 0 10px rgba(76,201,240,0.08);
+      animation: none;
+    }
+    .slot.drag-over {
+      border-color: var(--gold);
+      background: rgba(255,214,10,0.07);
+      box-shadow: 0 0 18px rgba(255,214,10,0.22), inset 0 2px 6px rgba(0,0,0,0.3);
+      animation: none;
+    }
+    .slot.correct {
+      border-style: solid;
+      border-color: var(--green);
+      background: rgba(45,198,83,0.07);
+      animation: ki-flash 0.6s ease forwards;
+    }
+    .slot.wrong {
+      border-style: solid;
+      border-color: var(--red);
+      background: rgba(230,57,70,0.07);
+      animation: bad-shake 0.4s ease forwards;
+    }
+    @keyframes ki-flash {
+      0%   { box-shadow: 0 0 0 rgba(45,198,83,0); }
+      40%  { box-shadow: 0 0 0 6px rgba(45,198,83,0.28), 0 0 28px rgba(45,198,83,0.35); }
+      100% { box-shadow: 0 0 0 0px rgba(45,198,83,0), 0 0 6px rgba(45,198,83,0.12); }
+    }
+    @keyframes bad-shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-5px) rotate(-1deg); }
+      40% { transform: translateX(5px) rotate(1deg); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+    }
+    .slot .pw {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #4cc9f0;
+      cursor: grab;
+      padding: 0 0.5rem;
+      user-select: none;
+    }
+    .slot .pw:active { cursor: grabbing; }
+    .slot.correct .pw { color: var(--green); }
+    .slot.wrong   .pw { color: var(--red); text-decoration: line-through; }
+    .slot .chint {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.68rem;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--green);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* Weapon rack */
+    .rack {
+      background: linear-gradient(to bottom, #0f0f1c, #0a0a14);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.4rem 1.5rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .rack::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 8%; right: 8%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,214,10,0.18), transparent);
+    }
+    .rack-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: rgba(255,214,10,0.38);
+      margin-bottom: 1rem;
+    }
+    .rack-pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      min-height: 50px;
+    }
+    .mobile-tip {
+      font-size: 0.7rem;
+      color: rgba(255,214,10,0.35);
+      margin-bottom: 0.6rem;
+      display: none;
+    }
+    @media (pointer: coarse) { .mobile-tip { display: block; } }
+
+    /* Token block */
+    .token {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      padding: 0.5rem 1.05rem;
+      border-radius: 8px;
+      background: linear-gradient(155deg, #1c1c2e, #141420);
+      border: 1px solid rgba(230,57,70,0.22);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.5), 0 5px 0 rgba(230,57,70,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.1s, box-shadow 0.1s, opacity 0.2s, border-color 0.15s;
+      animation: tok-in 0.3s ease both;
+    }
+    @keyframes tok-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .token:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255,214,10,0.45);
+      box-shadow: 0 7px 0 rgba(0,0,0,0.5), 0 0 14px rgba(255,214,10,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .token:active { cursor: grabbing; transform: translateY(-5px) scale(1.04); }
+    .token.dragging   { opacity: 0.18; }
+    .token.used       { opacity: 0; pointer-events: none; }
+    .token.touch-sel  {
+      border-color: var(--gold);
+      transform: translateY(-3px);
+      box-shadow: 0 7px 0 rgba(0,0,0,0.5), 0 0 18px rgba(255,214,10,0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    /* Feedback */
+    .ftg-fb {
+      border-radius: 10px;
+      padding: 1rem 1.3rem;
+      font-size: 0.88rem;
+      line-height: 1.75;
+      display: none;
+      margin-bottom: 1.25rem;
+    }
+    .ftg-fb.show    { display: block; animation: fb-in 0.25s ease; }
+    .ftg-fb.correct { background: rgba(45,198,83,0.06);  border: 1px solid rgba(45,198,83,0.22); }
+    .ftg-fb.wrong   { background: rgba(230,57,70,0.06);  border: 1px solid rgba(230,57,70,0.22); }
+    @keyframes fb-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* KIAI flash */
+    .kiai-flash {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.3);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 4.5rem;
+      font-weight: 700;
+      color: var(--green);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 9999;
+      text-shadow: 0 0 40px rgba(45,198,83,0.7);
+      letter-spacing: 5px;
+    }
+    .kiai-flash.pop { animation: kiai 0.65s cubic-bezier(0.22,0.61,0.36,1) forwards; }
+    @keyframes kiai {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
+      30%  { opacity: 1; transform: translate(-50%,-50%) scale(1.05); }
+      65%  { opacity: 0.9; transform: translate(-50%,-50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%,-58%) scale(0.95); }
+    }
+
+    .divider { height: 1px; background: linear-gradient(90deg,transparent,var(--border),transparent); margin: 1.5rem 0; }
+    .ftg-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<div class="ftg-arena">
+<div class="kiai-flash" id="kiai">正解!</div>
+
+<nav>
+  <a href="../index.html" class="logo">Debug<span>Dojo</span></a>
+  <ul>
+    <li><a href="../arcade.html">Arcade</a></li>
+    <li><a href="../journey.html">My Journey</a></li>
+  </ul>
+  <a href="../journey.html" class="nav-belt" id="nav-belt">
+    <span class="belt-dot"></span>
+    <span class="belt-name">My Belt</span>
+  </a>
+</nav>
+
+<div class="game-page">
+  <div class="game-header">
+    <div>
+      <div class="game-title">🧩 Fill the Gap</div>
+      <div style="color:var(--muted);font-size:0.85rem">Drag the right keyword into each blank</div>
+    </div>
+    <div class="score-box">
+      <div class="num" id="score-display">0 / 0</div>
+      <div class="label">Score</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <div id="question-area">
+    <div class="ftg-q-tag" id="q-sub">Question 1 of 8</div>
+    <div class="ftg-q-title" id="q-title"></div>
+
+    <div class="code-board" id="code-board"></div>
+
+    <div class="rack">
+      <div class="rack-label">⚔ Available Keywords</div>
+      <div class="mobile-tip">Tap a keyword to select it, then tap a blank to place it</div>
+      <div class="rack-pool" id="rack-pool"></div>
+    </div>
+
+    <div class="ftg-fb" id="ftg-fb"></div>
+    <div class="divider"></div>
+
+    <div class="ftg-btns">
+      <button class="btn btn-red"   id="submit-btn" onclick="submitAnswer()">⚡ Strike</button>
+      <button class="btn btn-ghost" id="clear-btn"  onclick="clearSlots()">↩ Reset</button>
+      <button class="btn btn-red"   id="next-btn"   onclick="nextQuestion()" style="display:none">Next →</button>
+    </div>
+  </div>
+
+  <div class="results-card" id="results-card">
+    <div style="font-size:3rem;margin-bottom:1rem">🥋</div>
+    <div class="results-score" id="results-score"></div>
+    <div class="results-label"  id="results-label"></div>
+    <div style="color:var(--muted);font-size:0.9rem;margin-top:0.5rem" id="results-xp"></div>
+    <div class="results-actions">
+      <button class="btn btn-red" onclick="restartGame()">Play Again</button>
+      <a href="../arcade.html" class="btn btn-ghost">Browse Games</a>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer>
+  <span class="logo">Debug<span style="color:var(--gold)">Dojo</span></span>
+</footer>
+
+<script src="../js/app.js"></script>
+<script>
+const ALL_QUESTIONS = [
+  {
+    title:"Complete the function definition",
+    segments:[{t:"gap",id:"g1",answer:"def",w:52},{t:"code",v:" greet",cls:"fn"},{t:"code",v:"(name)",cls:""},{t:"code",v:":",cls:"op"}],
+    tokens:["def","func","function","define","lambda"],
+    explain:"<strong>def</strong> is Python's keyword for defining a function. JavaScript uses <code>function</code>, Go uses <code>func</code> — Python always uses <code>def</code>."
+  },
+  {
+    title:"Print output to the screen",
+    segments:[{t:"gap",id:"g1",answer:"print",w:64},{t:"code",v:'("Hello, World!")',cls:"str"}],
+    tokens:["print","echo","console","output","log"],
+    explain:"<strong>print()</strong> outputs text to the terminal. PHP uses <code>echo</code>, JS uses <code>console.log</code> — Python always uses <code>print()</code>."
+  },
+  {
+    title:"Loop through each item in a list",
+    segments:[{t:"gap",id:"g1",answer:"for",w:46},{t:"code",v:" item ",cls:""},{t:"gap",id:"g2",answer:"in",w:38},{t:"code",v:" my_list",cls:""},{t:"code",v:":",cls:"op"}],
+    tokens:["for","while","each","in","of","from"],
+    explain:"<strong>for item in my_list:</strong> — Python iterates directly over a list. The keyword <code>in</code> connects your variable to the iterable."
+  },
+  {
+    title:"Check if a score is greater than 90",
+    segments:[{t:"gap",id:"g1",answer:"if",w:38},{t:"code",v:" score ",cls:""},{t:"code",v:">",cls:"op"},{t:"code",v:" 90",cls:"num"},{t:"code",v:":",cls:"op"}],
+    tokens:["if","when","check","while","unless"],
+    explain:"<strong>if</strong> is Python's conditional. Always ends with a colon. No parentheses needed — unlike C, Java, and JavaScript."
+  },
+  {
+    title:"Return a value from a function",
+    segments:[{t:"gap",id:"g1",answer:"return",w:72},{t:"code",v:" total",cls:""}],
+    tokens:["return","give","send","output","yield"],
+    explain:"<strong>return</strong> sends a value back to the caller. Once Python hits <code>return</code>, the function stops executing immediately."
+  },
+  {
+    title:"Load the random module",
+    segments:[{t:"gap",id:"g1",answer:"import",w:70},{t:"code",v:" random",cls:"fn"}],
+    tokens:["import","include","require","use","load"],
+    explain:"<strong>import</strong> loads a module. Python's standard library includes hundreds — <code>random</code>, <code>math</code>, <code>os</code>, <code>json</code>, and more."
+  },
+  {
+    title:"Create a list of three fruits",
+    segments:[{t:"code",v:"fruits",cls:""},{t:"code",v:" = ",cls:"op"},{t:"gap",id:"g1",answer:"[",w:34},{t:"code",v:'"apple"',cls:"str"},{t:"code",v:", ",cls:""},{t:"code",v:'"banana"',cls:"str"},{t:"gap",id:"g2",answer:"]",w:34}],
+    tokens:["[","]","{","}","(",")"],
+    explain:"Lists use <strong>square brackets [ ]</strong>. Curly braces <code>{}</code> make a dict or set. Parentheses <code>()</code> make a tuple."
+  },
+  {
+    title:"Begin catching a possible error",
+    segments:[{t:"gap",id:"g1",answer:"try",w:46},{t:"code",v:":",cls:"op"}],
+    tokens:["try","catch","handle","watch","guard"],
+    explain:"<strong>try:</strong> starts a block where Python attempts risky code. If an error occurs, execution jumps to the <code>except:</code> block. Python never uses <code>catch</code> — that's JavaScript."
+  },
+  {
+    title:"Define a class called Dog",
+    segments:[{t:"gap",id:"g1",answer:"class",w:58},{t:"code",v:" Dog",cls:"fn"},{t:"code",v:":",cls:"op"}],
+    tokens:["class","type","object","struct","def"],
+    explain:"<strong>class</strong> creates a blueprint for objects. No parentheses needed unless inheriting from another class: <code>class Dog(Animal):</code>"
+  },
+  {
+    title:"Loop while count is less than 10",
+    segments:[{t:"gap",id:"g1",answer:"while",w:58},{t:"code",v:" count ",cls:""},{t:"code",v:"<",cls:"op"},{t:"code",v:" 10",cls:"num"},{t:"code",v:":",cls:"op"}],
+    tokens:["while","until","loop","for","repeat"],
+    explain:"<strong>while</strong> keeps looping as long as the condition is True. If the condition never becomes False, you get an infinite loop."
+  },
+];
+
+let questions=[],current=0,correct=0,answered=false,draggedId=null,touchSel=null;
+
+function shuffle(a){return[...a].sort(()=>Math.random()-0.5);}
+
+function startGame(){
+  questions=shuffle(ALL_QUESTIONS).slice(0,8);
+  current=correct=0;answered=false;
+  document.getElementById('results-card').classList.remove('show');
+  document.getElementById('question-area').style.display='block';
+  loadQ();
+}
+
+function loadQ(){
+  answered=false;touchSel=null;
+  const q=questions[current];
+  document.getElementById('progress-fill').style.width=(current/questions.length*100)+'%';
+  document.getElementById('score-display').textContent=`${correct} / ${current}`;
+  document.getElementById('q-sub').textContent=`Question ${current+1} of ${questions.length}`;
+  document.getElementById('q-title').textContent=q.title;
+  document.getElementById('ftg-fb').className='ftg-fb';
+  document.getElementById('submit-btn').style.display='inline-flex';
+  document.getElementById('clear-btn').style.display='inline-flex';
+  document.getElementById('next-btn').style.display='none';
+  buildBoard(q);buildRack(q);
+}
+
+function buildBoard(q){
+  const board=document.getElementById('code-board');
+  board.innerHTML='';
+  q.segments.forEach(seg=>{
+    if(seg.t==='code'){
+      const s=document.createElement('span');
+      s.className='syn'+(seg.cls?' '+seg.cls:'');
+      s.textContent=seg.v;
+      board.appendChild(s);
+    } else {
+      const slot=document.createElement('div');
+      slot.className='slot';
+      slot.dataset.slotId=seg.id;
+      slot.dataset.answer=seg.answer;
+      if(seg.w) slot.style.minWidth=seg.w+'px';
+      slot.addEventListener('dragover', e=>{e.preventDefault();slot.classList.add('drag-over');});
+      slot.addEventListener('dragleave',()=>slot.classList.remove('drag-over'));
+      slot.addEventListener('drop',     e=>onDrop(e,slot));
+      slot.addEventListener('click',    ()=>onSlotClick(slot));
+      board.appendChild(slot);
+    }
+  });
+}
+
+function buildRack(q){
+  const pool=document.getElementById('rack-pool');
+  pool.innerHTML='';
+  shuffle(q.tokens).forEach((word,i)=>{
+    const tok=document.createElement('div');
+    tok.className='token';
+    tok.textContent=word;
+    tok.id='tok-'+i;
+    tok.dataset.word=word;
+    tok.draggable=true;
+    tok.style.animationDelay=(i*0.05)+'s';
+    tok.addEventListener('dragstart',e=>{
+      draggedId=tok.id;
+      e.dataTransfer.setData('word',word);
+      e.dataTransfer.setData('fromSlot','');
+      setTimeout(()=>tok.classList.add('dragging'),0);
+    });
+    tok.addEventListener('dragend',()=>{tok.classList.remove('dragging');draggedId=null;});
+    tok.addEventListener('click',()=>onTokClick(tok));
+    pool.appendChild(tok);
+  });
+}
+
+function onDrop(e,slot){
+  e.preventDefault();slot.classList.remove('drag-over');
+  const word=e.dataTransfer.getData('word');
+  const from=e.dataTransfer.getData('fromSlot');
+  if(!word)return;
+  evict(slot);
+  if(from){const old=document.querySelector(`.slot[data-slot-id="${from}"]`);if(old)clearSlot(old);}
+  else if(draggedId){document.getElementById(draggedId)?.classList.add('used');}
+  place(slot,word);
+}
+
+function onTokClick(tok){
+  if(answered)return;
+  if(touchSel===tok){tok.classList.remove('touch-sel');touchSel=null;return;}
+  if(touchSel)touchSel.classList.remove('touch-sel');
+  touchSel=tok;tok.classList.add('touch-sel');
+}
+
+function onSlotClick(slot){
+  if(answered)return;
+  if(touchSel){
+    evict(slot);
+    touchSel.classList.add('used');
+    touchSel.classList.remove('touch-sel');
+    place(slot,touchSel.dataset.word);
+    touchSel=null;return;
+  }
+  if(slot.dataset.placed)evict(slot);
+}
+
+function place(slot,word){
+  const span=document.createElement('span');
+  span.className='pw';span.textContent=word;
+  span.draggable=true;
+  span.addEventListener('dragstart',e=>{
+    e.dataTransfer.setData('word',word);
+    e.dataTransfer.setData('fromSlot',slot.dataset.slotId);
+    setTimeout(()=>span.classList.add('dragging'),0);
+  });
+  span.addEventListener('dragend',()=>span.classList.remove('dragging'));
+  slot.appendChild(span);slot.classList.add('filled');slot.dataset.placed=word;
+}
+
+function clearSlot(slot){
+  slot.querySelectorAll('.pw,.chint').forEach(el=>el.remove());
+  slot.classList.remove('filled','correct','wrong');
+  slot.style.position='';
+  delete slot.dataset.placed;
+}
+
+function evict(slot){
+  if(!slot.dataset.placed)return;
+  const word=slot.dataset.placed;
+  const used=document.querySelectorAll('#rack-pool .token.used');
+  for(const t of used){if(t.dataset.word===word){t.classList.remove('used');break;}}
+  clearSlot(slot);
+}
+
+function clearSlots(){document.querySelectorAll('.slot').forEach(evict);}
+
+function submitAnswer(){
+  const slots=document.querySelectorAll('.slot');
+  let allFilled=true;
+  slots.forEach(s=>{if(!s.dataset.placed)allFilled=false;});
+  if(!allFilled){
+    const fb=document.getElementById('ftg-fb');
+    fb.innerHTML='⚠️ Fill every blank before striking.';
+    fb.className='ftg-fb wrong show';return;
+  }
+  answered=true;let allOk=true;
+  slots.forEach(slot=>{
+    const ok=slot.dataset.placed===slot.dataset.answer;
+    slot.classList.remove('filled');slot.classList.add(ok?'correct':'wrong');
+    if(!ok){
+      allOk=false;
+      slot.style.position='relative';
+      const h=document.createElement('span');h.className='chint';h.textContent=slot.dataset.answer;
+      slot.appendChild(h);
+      playSound('wrong');
+    }
+  });
+  const q=questions[current];
+  const fb=document.getElementById('ftg-fb');
+  if(allOk){
+    correct++;addXP(15);
+    fb.innerHTML=`✅ <strong>Correct!</strong><br><br>${q.explain}`;
+    fb.className='ftg-fb correct show';
+    fireKiai();
+  } else {
+    fb.innerHTML=`❌ <strong>Not quite.</strong> Correct answers shown below the blanks in green.<br><br>${q.explain}`;
+    fb.className='ftg-fb wrong show';
+  }
+  document.getElementById('score-display').textContent=`${correct} / ${current+1}`;
+  document.getElementById('submit-btn').style.display='none';
+  document.getElementById('clear-btn').style.display='none';
+  document.getElementById('next-btn').style.display='inline-flex';
+  document.querySelectorAll('.token,.pw').forEach(t=>{t.draggable=false;t.style.cursor='default';t.style.pointerEvents='none';});
+}
+
+function fireKiai(){
+  const el=document.getElementById('kiai');
+  el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
+  setTimeout(()=>el.classList.remove('pop'),700);
+}
+
+function nextQuestion(){current++;if(current>=questions.length)showResults();else loadQ();}
+
+function showResults(){
+  document.getElementById('question-area').style.display='none';
+  document.getElementById('results-card').classList.add('show');
+  const pct=Math.round(correct/questions.length*100);
+  document.getElementById('results-score').textContent=`${correct} / ${questions.length}`;
+  document.getElementById('results-label').textContent=
+    pct===100?'🏆 Perfect! Syntax master.':
+    pct>=75?'🔥 Strong instincts. Syntax is becoming natural.':
+    pct>=50?'👊 Solid. Review the keywords you missed and go again.':
+    '💪 Repetition is the way. Every sensei started at zero.';
+  document.getElementById('results-xp').textContent=`+${correct*15} XP earned this round`;
+  document.getElementById('progress-fill').style.width='100%';
+}
+
+function restartGame(){startGame();}
+startGame();
+</script>
+</body>
+</html>

@@ -128,7 +128,8 @@
 
 <script src="js/app.js"></script>
 <script>
-const BELTS = [
+// BELT_DATA is separate from BELTS in app.js — it adds the 'desc' field for the roadmap UI
+const BELT_DATA = [
   { name:"White Belt",  color:"#f0f0f0", min:0,    max:100,  desc:"Complete the first 3 mini-games" },
   { name:"Yellow Belt", color:"#ffd60a", min:100,  max:250,  desc:"Master basic Python syntax" },
   { name:"Green Belt",  color:"#2dc653", min:250,  max:500,  desc:"Spot bugs reliably" },
@@ -147,10 +148,6 @@ document.querySelectorAll('.avatar-opt').forEach(opt => {
   });
 });
 
-function getBelt(xp) {
-  return BELTS.find(b => xp >= b.min && xp < b.max) || BELTS[BELTS.length - 1];
-}
-
 function createPlayer() {
   const name = document.getElementById('input-name').value.trim();
   if (!name) { alert('Please enter your name!'); return; }
@@ -165,7 +162,7 @@ function showDashboard(player) {
   document.getElementById('setup-section').style.display = 'none';
   document.getElementById('dashboard-section').style.display = 'block';
 
-  const belt = getBelt(player.xp);
+  const belt = getBelt(player.xp); // getBelt comes from app.js
   document.getElementById('dash-title').textContent = `Welcome back, ${player.name}!`;
   document.getElementById('dash-avatar').textContent = player.avatar;
   document.getElementById('dash-name').textContent = player.name;
@@ -178,7 +175,7 @@ function showDashboard(player) {
 
   const roadmap = document.getElementById('belt-roadmap');
   roadmap.innerHTML = '';
-  BELTS.forEach(b => {
+  BELT_DATA.forEach(b => {
     const earned = player.xp >= b.min;
     const current = player.xp >= b.min && player.xp < b.max;
     const div = document.createElement('div');

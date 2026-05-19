@@ -197,6 +197,7 @@ function selectAnswer(chosen) {
   const opts = document.querySelectorAll('.option');
   const isCorrect = chosen === q.answer;
   opts[chosen].classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) playSound('wrong');
   opts[q.answer].classList.add('correct');
   if (isCorrect) { correct++; addXP(10); }
   document.getElementById('score-display').textContent = `${correct} / ${current + 1}`;
